@@ -513,7 +513,20 @@
         }
 
         renderProperties();
-        renderAdvisorsAdminList();
+        function renderAdvisorsAdminList() {
+      const box = document.getElementById("advisorsListContainer");
+      box.innerHTML = allAdvisors.map(a => `
+        <div class="advisor-list-item">
+          <div style="display:flex; align-items:center; gap:10px;">
+            <img src="${a.foto || 'https://placehold.co/80x80/334155/fff?text=A'}" style="width:40px; height:40px; border-radius:50%; object-fit:cover;">
+            <div>
+              <div style="font-size:0.86rem; font-weight:700;">${a.nombre}</div>
+              <div style="font-size:0.74rem; color:#94a3b8;">${a.cargo} • WA: ${a.whatsapp}</div>
+            </div>
+          </div>
+        </div>`
+      ).join("");
+    }
 
         const saved = sessionStorage.getItem("konek_estate_pass");
         if (saved && !isAdmin) {
