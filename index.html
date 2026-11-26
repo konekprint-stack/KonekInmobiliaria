@@ -130,10 +130,6 @@
       background: #1e293b; border: 1px solid #334155; border-radius: 12px;
       padding: 10px 12px; display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-top: 8px;
     }
-    .btn-copy-link {
-      background: #0284c7; color: #fff; border: none; padding: 6px 10px;
-      border-radius: 8px; font-size: 0.76rem; font-weight: 700; cursor: pointer; white-space: nowrap;
-    }
 
     /* Buscador y Filtros */
     .filters-wrap { display: flex; flex-direction: column; gap: 10px; margin-bottom: 16px; }
@@ -345,7 +341,7 @@
         </div>
       </form>
 
-      <!-- GESTIÓN DE ASESORES Y ENLACES PARA LLAVEROS NFC -->
+      <!-- GESTIÓN DE ASESORES -->
       <div id="advisorsSection" style="display:none;">
         <form id="formAdvisor" class="form-grid">
           <div class="full-col">
@@ -501,7 +497,6 @@
           l.src = agencyData.logo; l.style.display = "block";
         }
 
-        // Mostrar foto y datos del vendedor dueño del llavero NFC
         if (activeAdvisor) {
           document.getElementById("advisorName").innerText = activeAdvisor.nombre;
           document.getElementById("advisorRole").innerText = activeAdvisor.cargo;
@@ -513,20 +508,7 @@
         }
 
         renderProperties();
-        function renderAdvisorsAdminList() {
-      const box = document.getElementById("advisorsListContainer");
-      box.innerHTML = allAdvisors.map(a => `
-        <div class="advisor-list-item">
-          <div style="display:flex; align-items:center; gap:10px;">
-            <img src="${a.foto || 'https://placehold.co/80x80/334155/fff?text=A'}" style="width:40px; height:40px; border-radius:50%; object-fit:cover;">
-            <div>
-              <div style="font-size:0.86rem; font-weight:700;">${a.nombre}</div>
-              <div style="font-size:0.74rem; color:#94a3b8;">${a.cargo} • WA: ${a.whatsapp}</div>
-            </div>
-          </div>
-        </div>`
-      ).join("");
-    }
+        renderAdvisorsAdminList();
 
         const saved = sessionStorage.getItem("konek_estate_pass");
         if (saved && !isAdmin) {
@@ -669,7 +651,6 @@
     }
     function goToSlide(idx) { currentSlideIdx = idx; updateCarouselView(); }
 
-    // Deslizamiento táctil (Swipe) en el carrusel para celulares
     const stageEl = document.getElementById("carouselStage");
     stageEl.addEventListener("touchstart", e => { touchStartX = e.changedTouches[0].screenX; }, { passive: true });
     stageEl.addEventListener("touchend", e => {
@@ -699,6 +680,7 @@
       btn.innerText = "🔓"; btn.classList.add("unlocked");
       closeAllModals();
       renderProperties();
+      renderAdvisorsAdminList();
     }
 
     document.getElementById("btnAdminLock").addEventListener("click", () => {
@@ -879,7 +861,7 @@
       await loadPortal();
     }
 
-    /* ALTA Y ENLACES DE ASESORES */
+    /* ALTA Y LISTA DE ASESORES */
     document.getElementById("advPhotoInput").addEventListener("change", async e => {
       if (!e.target.files[0]) return;
       advisorPhotoBase64 = await compressImage(e.target.files[0], 400, 0.8);
@@ -913,6 +895,27 @@
         status.style.color = "#ef4444"; status.innerText = "❌ Error: " + err.message;
       } finally { btn.disabled = false; }
     });
+
+    function renderAdvisorsAdminList() {
+      const box = document.getElementById("advisorsListContainer");
+      if (!box) return;
+      if (!allAdvisors || allAdvisors.length === 0) {
+        box.innerHTML = `<div style="font-size:0.8rem; color:#94a3b8; margin-top:6px;">No hay asesores registrados todavía.</div>`;
+        return;
+      }
+      box.innerHTML = allAdvisors.map(a => `
+        <div class="advisor-list-item">
+          <div style="display:flex; align-items:center; gap:10px;">
+            <img src="${a.foto || 'https://placehold.co/80x80/334155/fff?text=A'}" style="width:40px; height:40px; border-radius:50%; object-fit:cover;">
+            <div>
+              <div style="font-size:0.86rem; font-weight:700;">${a.nombre}</div>
+              <div style="font-size:0.74rem; color:#94a3b8;">${a.cargo} • WA: ${a.whatsapp}</div>
+            </div>
+          </div>
+        </div>`
+      ).join("");
+    }
+
     document.getElementById("searchInput").addEventListener("input", renderProperties);
     window.addEventListener("DOMContentLoaded", loadPortal);
   </script>
