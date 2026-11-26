@@ -1,0 +1,927 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>Catálogo Inmobiliario • KonekEstate</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --primary: #0f172a;
+      --accent: #0284c7;
+      --bg: #f1f5f9;
+      --card: #ffffff;
+      --text: #0f172a;
+      --muted: #64748b;
+      --border: #e2e8f0;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Plus Jakarta Sans', -apple-system, sans-serif; }
+    body { background: var(--bg); color: var(--text); padding-bottom: 70px; }
+
+    /* Encabezado Corporativo + Tarjeta de Asesor */
+    header {
+      background: linear-gradient(135deg, var(--primary), #1e293b);
+      color: #fff;
+      padding: 20px 16px 32px;
+      border-bottom-left-radius: 28px;
+      border-bottom-right-radius: 28px;
+      box-shadow: 0 10px 28px rgba(15, 23, 42, 0.22);
+      position: relative;
+      text-align: center;
+    }
+    .btn-lock {
+      position: absolute; top: 14px; right: 14px;
+      background: rgba(255,255,255,0.16); border: 1px solid rgba(255,255,255,0.32);
+      color: #fff; width: 38px; height: 38px; border-radius: 50%;
+      font-size: 0.95rem; cursor: pointer; display: flex; align-items: center; justify-content: center;
+    }
+    .btn-lock.unlocked { background: #10b981; border-color: #fff; }
+    .agency-bar { display: flex; align-items: center; justify-content: center; gap: 10px; margin-bottom: 14px; }
+    .agency-logo { height: 38px; width: auto; max-width: 140px; object-fit: contain; border-radius: 8px; background: #fff; padding: 3px 6px; display: none; }
+    .agency-name { font-size: 1.05rem; font-weight: 800; letter-spacing: 0.4px; opacity: 0.95; }
+
+    /* Tarjeta del Vendedor (Dueño del Llavero NFC) */
+    .advisor-card {
+      background: rgba(255,255,255,0.12);
+      backdrop-filter: blur(10px);
+      border: 1px solid rgba(255,255,255,0.22);
+      border-radius: 20px;
+      padding: 14px 16px;
+      max-width: 480px;
+      margin: 0 auto;
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      text-align: left;
+    }
+    .advisor-photo {
+      width: 72px; height: 72px; border-radius: 50%;
+      object-fit: cover; border: 3px solid #38bdf8;
+      background: #334155; flex-shrink: 0;
+    }
+    .advisor-badge {
+      display: inline-block; background: #0284c7; color: #fff;
+      font-size: 0.68rem; font-weight: 700; text-transform: uppercase;
+      padding: 2px 9px; border-radius: 20px; letter-spacing: 0.6px; margin-bottom: 4px;
+    }
+    .advisor-name { font-size: 1.15rem; font-weight: 800; line-height: 1.2; }
+    .advisor-role { font-size: 0.8rem; color: #cbd5e1; margin-top: 2px; }
+
+    .container { max-width: 1020px; margin: 0 auto; padding: 16px; }
+
+    /* Panel Administrativo */
+    #adminPanel {
+      display: none; background: #0f172a; color: #f8fafc;
+      border-radius: 20px; padding: 18px 16px; margin-bottom: 22px;
+      border: 2px solid #38bdf8; box-shadow: 0 12px 30px rgba(15,23,42,0.3);
+    }
+    .admin-top { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #1e293b; padding-bottom: 10px; margin-bottom: 12px; }
+    .admin-top h2 { font-size: 1rem; color: #38bdf8; }
+    .btn-logout { background: #ef4444; color: #fff; border: none; padding: 5px 10px; border-radius: 8px; font-size: 0.75rem; font-weight: 700; cursor: pointer; }
+    .admin-tabs { display: flex; gap: 8px; margin-bottom: 14px; }
+    .tab-btn { flex: 1; background: #1e293b; color: #94a3b8; border: 1px solid #334155; padding: 10px; border-radius: 10px; font-weight: 700; font-size: 0.85rem; cursor: pointer; }
+    .tab-btn.active { background: #0284c7; color: #fff; border-color: #0284c7; }
+
+    .form-grid { display: grid; grid-template-columns: 1fr; gap: 10px; }
+    @media (min-width: 640px) { .form-grid { grid-template-columns: 1fr 1fr; } .full-col { grid-column: 1 / -1; } }
+    .specs-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
+    .admin-label { display: block; font-size: 0.76rem; color: #94a3b8; margin-bottom: 4px; font-weight: 600; }
+    .admin-input, .admin-select, .admin-textarea {
+      width: 100%; background: #1e293b; border: 1px solid #334155;
+      color: #fff; padding: 10px 12px; border-radius: 10px; font-size: 0.88rem;
+    }
+
+    /* Caja de subida múltiple de fotos */
+    .multi-photo-box {
+      border: 2px dashed #38bdf8; background: rgba(56,189,248,0.08);
+      border-radius: 12px; padding: 14px; text-align: center;
+    }
+    .photo-btns-row { display: flex; gap: 10px; flex-wrap: wrap; justify-content: center; }
+    .btn-pick-media {
+      flex: 1; min-width: 135px; padding: 11px 12px; border-radius: 10px;
+      font-weight: 700; font-size: 0.86rem; cursor: pointer; color: #fff;
+    }
+    .thumbs-preview-grid {
+      display: grid; grid-template-columns: repeat(auto-fill, minmax(74px, 1fr));
+      gap: 8px; margin-top: 12px;
+    }
+    .thumb-item { position: relative; width: 100%; padding-bottom: 100%; border-radius: 8px; overflow: hidden; border: 1px solid #475569; }
+    .thumb-item img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+    .thumb-del {
+      position: absolute; top: 3px; right: 3px; background: rgba(239,68,68,0.92);
+      color: #fff; border: none; width: 20px; height: 20px; border-radius: 50%;
+      font-size: 0.7rem; font-weight: 800; cursor: pointer;
+    }
+
+    .btn-primary-admin {
+      background: #10b981; color: #fff; border: none; width: 100%;
+      padding: 13px; border-radius: 12px; font-size: 0.95rem; font-weight: 800; cursor: pointer; margin-top: 4px;
+    }
+    .btn-primary-admin:disabled { opacity: 0.6; cursor: not-allowed; }
+    .btn-cancel-admin {
+      display: none; background: #64748b; color: #fff; border: none; width: 100%;
+      padding: 10px; border-radius: 10px; font-size: 0.86rem; font-weight: 700; cursor: pointer; margin-top: 6px;
+    }
+
+    /* Lista de asesores en el panel */
+    .advisor-list-item {
+      background: #1e293b; border: 1px solid #334155; border-radius: 12px;
+      padding: 10px 12px; display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-top: 8px;
+    }
+    .btn-copy-link {
+      background: #0284c7; color: #fff; border: none; padding: 6px 10px;
+      border-radius: 8px; font-size: 0.76rem; font-weight: 700; cursor: pointer; white-space: nowrap;
+    }
+
+    /* Buscador y Filtros */
+    .filters-wrap { display: flex; flex-direction: column; gap: 10px; margin-bottom: 16px; }
+    .search-input {
+      width: 100%; padding: 12px 16px; border-radius: 14px;
+      border: 1px solid var(--border); background: var(--card); font-size: 0.92rem;
+    }
+    .pills-bar { display: flex; gap: 8px; overflow-x: auto; padding-bottom: 4px; }
+    .filter-pill {
+      background: var(--card); color: var(--muted); border: 1px solid var(--border);
+      padding: 8px 16px; border-radius: 50px; font-size: 0.82rem; font-weight: 700; white-space: nowrap; cursor: pointer;
+    }
+    .filter-pill.active { background: var(--primary); color: #fff; border-color: var(--primary); }
+
+    /* Cuadrícula de Propiedades */
+    .props-grid { display: grid; grid-template-columns: 1fr; gap: 16px; }
+    @media (min-width: 640px) { .props-grid { grid-template-columns: repeat(2, 1fr); } }
+    @media (min-width: 920px) { .props-grid { grid-template-columns: repeat(3, 1fr); } }
+
+    .prop-card {
+      background: var(--card); border-radius: 18px; overflow: hidden;
+      border: 1px solid var(--border); box-shadow: 0 6px 18px rgba(15,23,42,0.06);
+      display: flex; flex-direction: column; position: relative;
+    }
+    .prop-cover { position: relative; width: 100%; padding-bottom: 68%; background: #e2e8f0; cursor: pointer; }
+    .prop-cover img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+    .badge-op {
+      position: absolute; top: 10px; left: 10px; background: var(--primary); color: #fff;
+      font-size: 0.72rem; font-weight: 800; padding: 4px 10px; border-radius: 8px; text-transform: uppercase;
+    }
+    .badge-op.renta { background: #7c3aed; }
+    .badge-status {
+      position: absolute; bottom: 10px; left: 10px; background: rgba(15,23,42,0.85); color: #38bdf8;
+      font-size: 0.7rem; font-weight: 700; padding: 3px 9px; border-radius: 6px;
+    }
+    .badge-photos-count {
+      position: absolute; bottom: 10px; right: 10px; background: rgba(15,23,42,0.82); color: #fff;
+      font-size: 0.74rem; font-weight: 700; padding: 4px 10px; border-radius: 20px;
+    }
+    .admin-card-actions { position: absolute; top: 10px; right: 10px; display: none; gap: 6px; z-index: 10; }
+    .btn-card-ico { width: 32px; height: 32px; border-radius: 50%; border: none; color: #fff; font-weight: 700; cursor: pointer; }
+
+    .prop-body { padding: 14px; display: flex; flex-direction: column; flex-grow: 1; justify-content: space-between; }
+    .prop-price { font-size: 1.32rem; font-weight: 800; color: var(--accent); margin-bottom: 3px; }
+    .prop-title { font-size: 1.02rem; font-weight: 700; margin-bottom: 4px; line-height: 1.25; }
+    .prop-loc { font-size: 0.8rem; color: var(--muted); margin-bottom: 10px; }
+    .prop-specs-bar {
+      display: flex; flex-wrap: wrap; gap: 10px; padding: 8px 0;
+      border-top: 1px solid var(--border); border-bottom: 1px solid var(--border);
+      font-size: 0.78rem; font-weight: 700; color: #334155; margin-bottom: 12px;
+    }
+    .card-actions-row { display: flex; gap: 8px; }
+    .btn-gallery-open {
+      flex: 1; background: #f1f5f9; color: var(--text); border: 1px solid var(--border);
+      padding: 10px; border-radius: 10px; font-size: 0.82rem; font-weight: 700; cursor: pointer;
+    }
+    .btn-wa-advisor {
+      flex: 1.3; background: #25D366; color: #fff; text-decoration: none;
+      padding: 10px; border-radius: 10px; font-size: 0.82rem; font-weight: 800;
+      display: flex; align-items: center; justify-content: center; gap: 5px;
+    }
+
+    /* Modal Carrusel de Galería + Ficha Técnica */
+    .modal-overlay {
+      display: none; position: fixed; inset: 0; background: rgba(15,23,42,0.9);
+      z-index: 9999; justify-content: center; align-items: center; padding: 12px; overflow-y: auto;
+    }
+    .carousel-modal-card {
+      background: #fff; color: var(--text); border-radius: 22px; width: 100%;
+      max-width: 640px; overflow: hidden; position: relative; margin: auto;
+      box-shadow: 0 20px 50px rgba(0,0,0,0.5);
+    }
+    .modal-close-btn {
+      position: absolute; top: 12px; right: 12px; z-index: 20;
+      background: rgba(15,23,42,0.75); color: #fff; border: none;
+      width: 36px; height: 36px; border-radius: 50%; font-size: 1.1rem; cursor: pointer;
+    }
+    .carousel-stage {
+      position: relative; width: 100%; height: 320px; background: #0f172a;
+      display: flex; align-items: center; justify-content: center; user-select: none; touch-action: pan-y;
+    }
+    @media (min-width: 640px) { .carousel-stage { height: 400px; } }
+    .carousel-stage img { width: 100%; height: 100%; object-fit: contain; }
+    .car-nav-btn {
+      position: absolute; top: 50%; transform: translateY(-50%);
+      background: rgba(15,23,42,0.68); color: #fff; border: 1px solid rgba(255,255,255,0.25);
+      width: 40px; height: 40px; border-radius: 50%; font-size: 1.2rem; cursor: pointer;
+    }
+    .car-prev { left: 10px; }
+    .car-next { right: 10px; }
+    .car-counter {
+      position: absolute; bottom: 10px; right: 12px; background: rgba(15,23,42,0.8);
+      color: #fff; font-size: 0.76rem; font-weight: 700; padding: 4px 10px; border-radius: 20px;
+    }
+    .car-thumbs-strip {
+      display: flex; gap: 6px; overflow-x: auto; padding: 10px 14px; background: #f8fafc; border-bottom: 1px solid var(--border);
+    }
+    .car-thumb {
+      width: 58px; height: 46px; border-radius: 8px; object-fit: cover;
+      opacity: 0.55; cursor: pointer; border: 2px solid transparent; flex-shrink: 0;
+    }
+    .car-thumb.active { opacity: 1; border-color: var(--accent); }
+    .modal-details-body { padding: 18px; }
+    .status-msg { text-align: center; padding: 40px 15px; color: var(--muted); grid-column: 1 / -1; }
+    footer { text-align: center; padding: 24px 12px; font-size: 0.78rem; color: var(--muted); }
+  </style>
+</head>
+<body>
+
+  <header>
+    <button type="button" id="btnAdminLock" class="btn-lock" title="Acceso Administrador">🔒</button>
+    <div class="agency-bar">
+      <img id="agencyLogo" class="agency-logo" src="" alt="Logo">
+      <span id="agencyName" class="agency-name">Cargando Inmobiliaria...</span>
+    </div>
+
+    <!-- Tarjeta personalizada con la foto y datos del vendedor del llavero -->
+    <div class="advisor-card" id="advisorCard">
+      <img id="advisorPhoto" class="advisor-photo" src="https://placehold.co/150x150/1e293b/38bdf8?text=Asesor" alt="Asesor">
+      <div>
+        <span class="advisor-badge">Tu Asesor Asignado</span>
+        <div id="advisorName" class="advisor-name">Cargando asesor...</div>
+        <div id="advisorRole" class="advisor-role">Atención personalizada por WhatsApp</div>
+      </div>
+    </div>
+  </header>
+
+  <div class="container">
+    <!-- PANEL EXCLUSIVO ADMINISTRADOR -->
+    <section id="adminPanel">
+      <div class="admin-top">
+        <h2>🏢 Administración Central</h2>
+        <button type="button" id="btnLogout" class="btn-logout">Salir</button>
+      </div>
+      <div class="admin-tabs">
+        <button type="button" class="tab-btn active" id="tabPropsBtn" onclick="switchTab('props')">🏠 Propiedades</button>
+        <button type="button" class="tab-btn" id="tabAdvisorsBtn" onclick="switchTab('advisors')">👔 Asesores y Llaveros</button>
+      </div>
+
+      <!-- FORMULARIO DE PROPIEDADES + GALERÍA MÚLTIPLE -->
+      <form id="formProperty" class="form-grid">
+        <div class="full-col">
+          <div class="multi-photo-box">
+            <div class="photo-btns-row">
+              <label for="propCameraInput" class="btn-pick-media" style="background:#0284c7;">📸 Tomar Foto</label>
+              <input type="file" id="propCameraInput" accept="image/*" capture="environment" style="display:none;">
+
+              <label for="propGalleryInput" class="btn-pick-media" style="background:#1e293b; border:1px solid #475569;">🖼️ Elegir Fotos (Varias)</label>
+              <input type="file" id="propGalleryInput" accept="image/*" multiple style="display:none;">
+            </div>
+            <span id="mediaStatusText" style="display:block; font-size:0.76rem; color:#94a3b8; margin-top:8px;">Puedes seleccionar varias fotos para el carrusel de esta propiedad</span>
+            <div id="thumbsPreviewGrid" class="thumbs-preview-grid"></div>
+          </div>
+        </div>
+
+        <div class="full-col">
+          <label class="admin-label">Título de la propiedad *</label>
+          <input type="text" id="propTitulo" class="admin-input" placeholder="Ej. Residencia Moderna en Privada con Alberca" required>
+        </div>
+        <div>
+          <label class="admin-label">Operación *</label>
+          <select id="propOperacion" class="admin-select">
+            <option value="Venta">Venta</option>
+            <option value="Renta">Renta</option>
+          </select>
+        </div>
+        <div>
+          <label class="admin-label">Tipo de inmueble *</label>
+          <select id="propTipo" class="admin-select">
+            <option value="Casa">Casa</option>
+            <option value="Departamento">Departamento</option>
+            <option value="Terreno">Terreno</option>
+            <option value="Local Comercial">Local Comercial</option>
+          </select>
+        </div>
+        <div>
+          <label class="admin-label">Precio (MXN) *</label>
+          <input type="number" id="propPrecio" class="admin-input" placeholder="Ej. 2450000" required>
+        </div>
+        <div>
+          <label class="admin-label">Estado comercial</label>
+          <select id="propEstado" class="admin-select">
+            <option value="DISPONIBLE">Disponible</option>
+            <option value="APARTADA">Apartada</option>
+            <option value="VENDIDA">Vendida / Rentada</option>
+          </select>
+        </div>
+        <div class="full-col">
+          <label class="admin-label">Ubicación / Zona *</label>
+          <input type="text" id="propUbicacion" class="admin-input" placeholder="Ej. Fraccionamiento Real Castilla, Tizayuca" required>
+        </div>
+        <div class="full-col">
+          <label class="admin-label">Ficha Técnica (Recámaras / Baños / Autos / m²)</label>
+          <div class="specs-grid">
+            <input type="number" id="propRec" class="admin-input" placeholder="Recám." min="0">
+            <input type="number" id="propBanos" class="admin-input" step="0.5" placeholder="Baños" min="0">
+            <input type="number" id="propEst" class="admin-input" placeholder="Autos" min="0">
+            <input type="number" id="propMetros" class="admin-input" placeholder="m²" min="0">
+          </div>
+        </div>
+        <div class="full-col">
+          <label class="admin-label">Descripción y amenidades</label>
+          <textarea id="propDesc" class="admin-textarea" rows="3" placeholder="Detalles de distribución, acabados, créditos aceptados..."></textarea>
+        </div>
+        <div class="full-col">
+          <button type="submit" id="btnSaveProp" class="btn-primary-admin">➕ Publicar Propiedad</button>
+          <button type="button" id="btnCancelPropEdit" class="btn-cancel-admin" onclick="resetPropertyForm()">✕ Cancelar Edición</button>
+          <p id="propFormStatus" style="text-align:center; font-size:0.82rem; margin-top:8px; color:#38bdf8;"></p>
+        </div>
+      </form>
+
+      <!-- GESTIÓN DE ASESORES Y ENLACES PARA LLAVEROS NFC -->
+      <div id="advisorsSection" style="display:none;">
+        <form id="formAdvisor" class="form-grid">
+          <div class="full-col">
+            <label for="advPhotoInput" class="multi-photo-box" style="cursor:pointer; border-color:#10b981; background:rgba(16,185,129,0.08);">
+              📷 <strong>Subir Fotografía del Asesor</strong>
+              <img id="advPhotoPreview" src="" style="width:68px; height:68px; border-radius:50%; object-fit:cover; margin:8px auto 0; display:none; border:2px solid #fff;">
+            </label>
+            <input type="file" id="advPhotoInput" accept="image/*" style="display:none;">
+          </div>
+          <div>
+            <label class="admin-label">ID único del asesor (sin espacios) *</label>
+            <input type="text" id="advId" class="admin-input" placeholder="Ej. carlos-gomez" required>
+          </div>
+          <div>
+            <label class="admin-label">Nombre completo *</label>
+            <input type="text" id="advNombre" class="admin-input" placeholder="Ej. Carlos Gómez" required>
+          </div>
+          <div>
+            <label class="admin-label">Cargo / Puesto</label>
+            <input type="text" id="advCargo" class="admin-input" value="Asesor Inmobiliario">
+          </div>
+          <div>
+            <label class="admin-label">WhatsApp (52 + 10 dígitos) *</label>
+            <input type="tel" id="advWhatsapp" class="admin-input" placeholder="Ej. 525512345678" required>
+          </div>
+          <div class="full-col">
+            <button type="submit" id="btnSaveAdv" class="btn-primary-admin" style="background:#0284c7;">💾 Guardar Asesor</button>
+            <p id="advFormStatus" style="text-align:center; font-size:0.82rem; margin-top:8px; color:#38bdf8;"></p>
+          </div>
+        </form>
+        <div style="margin-top:16px;">
+          <span class="admin-label">Enlaces listos para grabar en cada llavero KonekTag:</span>
+          <div id="advisorsListContainer"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- BUSCADOR Y FILTROS -->
+    <div class="filters-wrap">
+      <input type="search" id="searchInput" class="search-input" placeholder="🔍 Buscar por zona, título, casa o departamento...">
+      <div class="pills-bar" id="filterPills">
+        <button type="button" class="filter-pill active" onclick="setFilter('TODOS', this)">Todas</button>
+        <button type="button" class="filter-pill" onclick="setFilter('Venta', this)">En Venta</button>
+        <button type="button" class="filter-pill" onclick="setFilter('Renta', this)">En Renta</button>
+        <button type="button" class="filter-pill" onclick="setFilter('Casa', this)">Casas</button>
+        <button type="button" class="filter-pill" onclick="setFilter('Departamento', this)">Departamentos</button>
+      </div>
+    </div>
+
+    <!-- LISTADO DE PROPIEDADES -->
+    <div class="props-grid" id="propsGrid">
+      <div class="status-msg">⏳ Cargando catálogo de propiedades...</div>
+    </div>
+  </div>
+
+  <!-- MODAL LOGIN ADMINISTRADOR -->
+  <div id="loginModal" class="modal-overlay">
+    <div class="carousel-modal-card" style="max-width:360px; padding:24px 20px; text-align:center;">
+      <button type="button" class="modal-close-btn" onclick="closeAllModals()">✕</button>
+      <div style="font-size:2rem; margin-bottom:6px;">🔐</div>
+      <h3 style="margin-bottom:4px;">Acceso Administrador</h3>
+      <p style="font-size:0.82rem; color:var(--muted); margin-bottom:14px;">Solo gerencia puede subir o editar propiedades.</p>
+      <input type="password" id="adminPassInput" class="search-input" placeholder="Contraseña..." style="text-align:center; margin-bottom:12px;">
+      <button type="button" id="btnVerifyPass" class="btn-primary-admin" style="background:var(--primary);">Entrar</button>
+      <p id="loginError" style="color:#ef4444; font-size:0.8rem; margin-top:8px;"></p>
+    </div>
+  </div>
+
+  <!-- MODAL CARRUSEL DE FOTOS + DETALLE COMPLETO -->
+  <div id="carouselModal" class="modal-overlay" onclick="if(event.target===this) closeAllModals()">
+    <div class="carousel-modal-card">
+      <button type="button" class="modal-close-btn" onclick="closeAllModals()">✕</button>
+      <div class="carousel-stage" id="carouselStage">
+        <img id="carMainImg" src="" alt="Vista de propiedad">
+        <button type="button" class="car-nav-btn car-prev" id="carPrevBtn" onclick="moveSlide(-1)">❮</button>
+        <button type="button" class="car-nav-btn car-next" id="carNextBtn" onclick="moveSlide(1)">❯</button>
+        <span class="car-counter" id="carCounter">1 / 1</span>
+      </div>
+      <div class="car-thumbs-strip" id="carThumbsStrip"></div>
+      <div class="modal-details-body">
+        <div style="display:flex; justify-content:space-between; align-items:center; gap:8px; margin-bottom:4px;">
+          <span id="detOpBadge" style="font-size:0.75rem; font-weight:800; color:var(--accent); text-transform:uppercase;"></span>
+          <span id="detPrice" style="font-size:1.35rem; font-weight:800; color:var(--primary);"></span>
+        </div>
+        <h3 id="detTitle" style="font-size:1.15rem; margin-bottom:4px;"></h3>
+        <p id="detLocation" style="font-size:0.84rem; color:var(--muted); margin-bottom:10px;"></p>
+        <div id="detSpecs" class="prop-specs-bar"></div>
+        <p id="detDesc" style="font-size:0.88rem; color:#334155; line-height:1.5; margin-bottom:16px; white-space:pre-line;"></p>
+        <a id="detWaBtn" href="#" target="_blank" class="btn-wa-advisor" style="padding:13px; font-size:0.95rem;">📲 Contactar a mi Asesor por WhatsApp</a>
+      </div>
+    </div>
+  </div>
+
+  <footer>Portal Inmobiliario impulsado por <strong>KONEK Print &amp; Tech</strong> ⚡</footer>
+
+  <script>
+    // PEGA AQUÍ LA URL /exec DE TU NUEVO PROYECTO INMOBILIARIA_API
+    const API_URL = "PEGA_AQUI_TU_URL_EXEC_DE_INMOBILIARIA";
+
+    const urlParams = new URLSearchParams(window.location.search);
+    const ASESOR_ID = (urlParams.get("asesor") || "").trim().toLowerCase();
+
+    let agencyData = null, activeAdvisor = null, allAdvisors = [], allProperties = [];
+    let activeFilter = "TODOS", isAdmin = false, adminPass = "";
+    let editingPropId = null, existingImageIds = [], newImagesBase64 = [], advisorPhotoBase64 = "";
+    let currentSlideImages = [], currentSlideIdx = 0, touchStartX = 0;
+
+    function universalGet(params) {
+      return new Promise((resolve, reject) => {
+        const cb = "est_cb_" + Date.now() + "_" + Math.floor(Math.random() * 100000);
+        const s = document.createElement("script");
+        s.crossOrigin = "anonymous";
+        s.referrerPolicy = "no-referrer";
+        const base = API_URL.trim().replace(/\/+$/, "");
+        params.callback = cb;
+        params._t = Date.now();
+        const q = Object.keys(params).map(k => encodeURIComponent(k) + "=" + encodeURIComponent(params[k])).join("&");
+        const timer = setTimeout(() => { delete window[cb]; s.remove(); reject(new Error("Tiempo agotado")); }, 15000);
+        window[cb] = data => { clearTimeout(timer); delete window[cb]; s.remove(); resolve(data); };
+        s.onerror = () => { clearTimeout(timer); delete window[cb]; s.remove(); reject(new Error("Error de conexión con Apps Script")); };
+        s.src = base + (base.includes("?") ? "&" : "?") + q;
+        document.head.appendChild(s);
+      });
+    }
+
+    function universalPost(payload) {
+      return fetch(API_URL.trim(), {
+        method: "POST",
+        mode: "no-cors",
+        headers: { "Content-Type": "text/plain;charset=utf-8" },
+        body: JSON.stringify(payload)
+      });
+    }
+
+    async function loadPortal() {
+      const grid = document.getElementById("propsGrid");
+      try {
+        const res = await universalGet({ action: "getData", asesor: ASESOR_ID });
+        if (!res || !res.success) {
+          grid.innerHTML = `<div class="status-msg">⚠️ ${(res && res.error) ? res.error : "No se pudo cargar el portal."}</div>`;
+          return;
+        }
+        agencyData = res.agencia;
+        activeAdvisor = res.asesor;
+        allAdvisors = res.asesores || [];
+        allProperties = res.propiedades || [];
+
+        document.title = agencyData.nombre + " • Catálogo";
+        document.getElementById("agencyName").innerText = agencyData.nombre;
+        if (agencyData.color) document.documentElement.style.setProperty("--primary", agencyData.color);
+        if (agencyData.logo) {
+          const l = document.getElementById("agencyLogo");
+          l.src = agencyData.logo; l.style.display = "block";
+        }
+
+        // Mostrar foto y datos del vendedor dueño del llavero NFC
+        if (activeAdvisor) {
+          document.getElementById("advisorName").innerText = activeAdvisor.nombre;
+          document.getElementById("advisorRole").innerText = activeAdvisor.cargo;
+          if (activeAdvisor.foto) document.getElementById("advisorPhoto").src = activeAdvisor.foto;
+        } else {
+          document.getElementById("advisorName").innerText = agencyData.nombre;
+          document.getElementById("advisorRole").innerText = "Catálogo General de Propiedades";
+          if (agencyData.logo) document.getElementById("advisorPhoto").src = agencyData.logo;
+        }
+
+        renderProperties();
+        renderAdvisorsAdminList();
+
+        const saved = sessionStorage.getItem("konek_estate_pass");
+        if (saved && !isAdmin) {
+          const check = await universalGet({ action: "checkAdmin", pass: saved });
+          if (check && check.success) unlockAdmin(saved);
+        }
+      } catch (err) {
+        grid.innerHTML = `<div class="status-msg">❌ ${err.message}</div>`;
+      }
+    }
+
+    function getTargetWhatsApp() {
+      return (activeAdvisor && activeAdvisor.whatsapp) ? activeAdvisor.whatsapp : (agencyData.whatsappGeneral || "");
+    }
+
+    function buildWhatsAppUrl(prop) {
+      const phone = getTargetWhatsApp();
+      const priceFmt = "$" + Number(prop.precio).toLocaleString("es-MX");
+      const asesorTxt = activeAdvisor ? `Hola *${activeAdvisor.nombre}*, me` : "Hola, me";
+      const msg = `${asesorTxt} interesa recibir más información sobre esta propiedad:\n🏠 *${prop.titulo}*\n📍 ${prop.ubicacion}\n🏷️ ${prop.operacion} • ${priceFmt}`;
+      return `https://wa.me/${phone}?text=${encodeURIComponent(msg)}`;
+    }
+
+    function setFilter(val, btn) {
+      activeFilter = val;
+      document.querySelectorAll(".filter-pill").forEach(p => p.classList.remove("active"));
+      btn.classList.add("active");
+      renderProperties();
+    }
+
+    function renderProperties() {
+      const grid = document.getElementById("propsGrid");
+      const q = document.getElementById("searchInput").value.trim().toLowerCase();
+
+      const list = allProperties.filter(p => {
+        const matchFilter = activeFilter === "TODOS" ||
+          p.operacion.toLowerCase() === activeFilter.toLowerCase() ||
+          p.tipo.toLowerCase() === activeFilter.toLowerCase();
+        const matchSearch = !q ||
+          p.titulo.toLowerCase().includes(q) ||
+          p.ubicacion.toLowerCase().includes(q) ||
+          p.tipo.toLowerCase().includes(q);
+        return matchFilter && matchSearch;
+      });
+
+      if (list.length === 0) {
+        grid.innerHTML = `<div class="status-msg">🏡 No se encontraron propiedades con ese filtro.</div>`;
+        return;
+      }
+
+      grid.innerHTML = list.map(p => {
+        const coverUrl = (p.imagenes && p.imagenes.length > 0)
+          ? `https://drive.google.com/thumbnail?sz=w700&id=${p.imagenes[0]}`
+          : `https://placehold.co/600x400/e2e8f0/64748b?text=Sin+Fotos`;
+        const priceFmt = "$" + Number(p.precio).toLocaleString("es-MX");
+        const countPhotos = p.imagenes ? p.imagenes.length : 0;
+
+        return `
+          <article class="prop-card">
+            <div class="admin-card-actions" style="display:${isAdmin ? 'flex' : 'none'};">
+              <button type="button" class="btn-card-ico" style="background:#0284c7;" onclick="editProperty('${p.id}')">✏️</button>
+              <button type="button" class="btn-card-ico" style="background:#ef4444;" onclick="removeProperty('${p.id}', '${p.titulo.replace(/'/g, "\\'")}')">✕</button>
+            </div>
+            <div class="prop-cover" onclick="openCarousel('${p.id}')">
+              <span class="badge-op ${p.operacion.toLowerCase() === 'renta' ? 'renta' : ''}">${p.operacion} • ${p.tipo}</span>
+              ${p.estado !== "DISPONIBLE" ? `<span class="badge-status">${p.estado}</span>` : ""}
+              <span class="badge-photos-count">📸 ${countPhotos} ${countPhotos === 1 ? 'foto' : 'fotos'}</span>
+              <img src="${coverUrl}" loading="lazy" alt="${p.titulo}">
+            </div>
+            <div class="prop-body">
+              <div>
+                <div class="prop-price">${priceFmt} <span style="font-size:0.75rem; font-weight:600; color:var(--muted);">MXN</span></div>
+                <h3 class="prop-title">${p.titulo}</h3>
+                <div class="prop-loc">📍 ${p.ubicacion}</div>
+              </div>
+              <div>
+                <div class="prop-specs-bar">
+                  ${p.recamaras ? `<span>🛏️ ${p.recamaras} Rec.</span>` : ""}
+                  ${p.banos ? `<span>🚿 ${p.banos} Baños</span>` : ""}
+                  ${p.estacionamientos ? `<span>🚗 ${p.estacionamientos}</span>` : ""}
+                  ${p.metros ? `<span>📐 ${p.metros} m²</span>` : ""}
+                </div>
+                <div class="card-actions-row">
+                  <button type="button" class="btn-gallery-open" onclick="openCarousel('${p.id}')">🖼️ Ver Galería</button>
+                  <a href="${buildWhatsAppUrl(p)}" target="_blank" class="btn-wa-advisor">📲 WhatsApp</a>
+                </div>
+              </div>
+            </div>
+          </article>`;
+      }).join("");
+    }
+
+    /* CARRUSEL DE FOTOS POR PROPIEDAD */
+    function openCarousel(propId) {
+      const p = allProperties.find(item => String(item.id) === String(propId));
+      if (!p) return;
+
+      currentSlideImages = (p.imagenes && p.imagenes.length > 0)
+        ? p.imagenes.map(id => `https://drive.google.com/thumbnail?sz=w1200&id=${id}`)
+        : [`https://placehold.co/800x600/e2e8f0/64748b?text=Sin+Fotos`];
+      currentSlideIdx = 0;
+
+      document.getElementById("detOpBadge").innerText = `${p.operacion} • ${p.tipo} (${p.estado})`;
+      document.getElementById("detPrice").innerText = "$" + Number(p.precio).toLocaleString("es-MX") + " MXN";
+      document.getElementById("detTitle").innerText = p.titulo;
+      document.getElementById("detLocation").innerText = "📍 " + p.ubicacion;
+      document.getElementById("detSpecs").innerHTML = `
+        ${p.recamaras ? `<span>🛏️ ${p.recamaras} Recámaras</span>` : ""}
+        ${p.banos ? `<span>🚿 ${p.banos} Baños</span>` : ""}
+        ${p.estacionamientos ? `<span>🚗 ${p.estacionamientos} Estac.</span>` : ""}
+        ${p.metros ? `<span>📐 ${p.metros} m²</span>` : ""}
+      `;
+      document.getElementById("detDesc").innerText = p.descripcion || "Contáctame para agendar una visita o recibir ficha completa.";
+      const waBtn = document.getElementById("detWaBtn");
+      waBtn.href = buildWhatsAppUrl(p);
+      waBtn.innerText = activeAdvisor ? `📲 Contactar a ${activeAdvisor.nombre}` : "📲 Solicitar información por WhatsApp";
+
+      const strip = document.getElementById("carThumbsStrip");
+      strip.innerHTML = currentSlideImages.map((url, idx) =>
+        `<img src="${url}" class="car-thumb ${idx === 0 ? 'active' : ''}" onclick="goToSlide(${idx})">`
+      ).join("");
+
+      const showArrows = currentSlideImages.length > 1 ? "block" : "none";
+      document.getElementById("carPrevBtn").style.display = showArrows;
+      document.getElementById("carNextBtn").style.display = showArrows;
+
+      updateCarouselView();
+      document.getElementById("carouselModal").style.display = "flex";
+    }
+
+    function updateCarouselView() {
+      document.getElementById("carMainImg").src = currentSlideImages[currentSlideIdx];
+      document.getElementById("carCounter").innerText = `${currentSlideIdx + 1} / ${currentSlideImages.length}`;
+      document.querySelectorAll(".car-thumb").forEach((el, i) => el.classList.toggle("active", i === currentSlideIdx));
+    }
+
+    function moveSlide(step) {
+      currentSlideIdx = (currentSlideIdx + step + currentSlideImages.length) % currentSlideImages.length;
+      updateCarouselView();
+    }
+    function goToSlide(idx) { currentSlideIdx = idx; updateCarouselView(); }
+
+    // Deslizamiento táctil (Swipe) en el carrusel para celulares
+    const stageEl = document.getElementById("carouselStage");
+    stageEl.addEventListener("touchstart", e => { touchStartX = e.changedTouches[0].screenX; }, { passive: true });
+    stageEl.addEventListener("touchend", e => {
+      const diff = touchStartX - e.changedTouches[0].screenX;
+      if (Math.abs(diff) > 40) moveSlide(diff > 0 ? 1 : -1);
+    }, { passive: true });
+
+    function closeAllModals() {
+      document.getElementById("loginModal").style.display = "none";
+      document.getElementById("carouselModal").style.display = "none";
+    }
+
+    /* ADMINISTRACIÓN */
+    function switchTab(tab) {
+      const isProps = tab === "props";
+      document.getElementById("formProperty").style.display = isProps ? "grid" : "none";
+      document.getElementById("advisorsSection").style.display = isProps ? "none" : "block";
+      document.getElementById("tabPropsBtn").classList.toggle("active", isProps);
+      document.getElementById("tabAdvisorsBtn").classList.toggle("active", !isProps);
+    }
+
+    function unlockAdmin(pass) {
+      isAdmin = true; adminPass = pass;
+      sessionStorage.setItem("konek_estate_pass", pass);
+      document.getElementById("adminPanel").style.display = "block";
+      const btn = document.getElementById("btnAdminLock");
+      btn.innerText = "🔓"; btn.classList.add("unlocked");
+      closeAllModals();
+      renderProperties();
+    }
+
+    document.getElementById("btnAdminLock").addEventListener("click", () => {
+      if (isAdmin) {
+        const p = document.getElementById("adminPanel");
+        p.style.display = p.style.display === "none" ? "block" : "none";
+      } else {
+        document.getElementById("loginError").innerText = "";
+        document.getElementById("adminPassInput").value = "";
+        document.getElementById("loginModal").style.display = "flex";
+      }
+    });
+
+    document.getElementById("btnVerifyPass").addEventListener("click", async () => {
+      const pass = document.getElementById("adminPassInput").value.trim();
+      const err = document.getElementById("loginError");
+      if (!pass) return;
+      err.style.color = "#38bdf8"; err.innerText = "Verificando...";
+      const res = await universalGet({ action: "checkAdmin", pass });
+      if (res && res.success) unlockAdmin(pass);
+      else { err.style.color = "#ef4444"; err.innerText = "❌ Contraseña incorrecta"; }
+    });
+
+    document.getElementById("btnLogout").addEventListener("click", () => {
+      isAdmin = false; adminPass = "";
+      sessionStorage.removeItem("konek_estate_pass");
+      document.getElementById("adminPanel").style.display = "none";
+      const btn = document.getElementById("btnAdminLock");
+      btn.innerText = "🔒"; btn.classList.remove("unlocked");
+      renderProperties();
+    });
+
+    function compressImage(file, maxDim, quality) {
+      return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = ev => {
+          const img = new Image();
+          img.onload = () => {
+            const c = document.createElement("canvas");
+            let w = img.width, h = img.height;
+            if (w > h && w > maxDim) { h = Math.round((h * maxDim) / w); w = maxDim; }
+            else if (h > maxDim) { w = Math.round((w * maxDim) / h); h = maxDim; }
+            c.width = w; c.height = h;
+            const ctx = c.getContext("2d");
+            ctx.fillStyle = "#ffffff"; ctx.fillRect(0, 0, w, h);
+            ctx.drawImage(img, 0, 0, w, h);
+            resolve(c.toDataURL("image/jpeg", quality));
+          };
+          img.onerror = reject;
+          img.src = ev.target.result;
+        };
+        reader.onerror = reject;
+        reader.readAsDataURL(file);
+      });
+    }
+
+    async function handleMultiMedia(e) {
+      const files = Array.from(e.target.files || []);
+      if (!files.length) return;
+      const btn = document.getElementById("btnSaveProp");
+      const status = document.getElementById("mediaStatusText");
+      btn.disabled = true;
+
+      for (let i = 0; i < files.length; i++) {
+        status.style.color = "#38bdf8";
+        status.innerText = `⏳ Optimizando foto ${i + 1} de ${files.length}...`;
+        try {
+          const b64 = await compressImage(files[i], 750, 0.75);
+          newImagesBase64.push(b64);
+        } catch (err) { console.error(err); }
+      }
+      renderFormThumbs();
+      btn.disabled = false;
+      status.style.color = "#4ade80";
+      status.innerText = `✅ ${existingImageIds.length + newImagesBase64.length} foto(s) listas en el carrusel`;
+      e.target.value = "";
+    }
+
+    document.getElementById("propCameraInput").addEventListener("change", handleMultiMedia);
+    document.getElementById("propGalleryInput").addEventListener("change", handleMultiMedia);
+
+    function renderFormThumbs() {
+      const grid = document.getElementById("thumbsPreviewGrid");
+      const existingHtml = existingImageIds.map((id, idx) => `
+        <div class="thumb-item">
+          <img src="https://drive.google.com/thumbnail?sz=w300&id=${id}">
+          <button type="button" class="thumb-del" onclick="removeExistingThumb(${idx})">✕</button>
+        </div>`);
+      const newHtml = newImagesBase64.map((b64, idx) => `
+        <div class="thumb-item">
+          <img src="${b64}">
+          <button type="button" class="thumb-del" onclick="removeNewThumb(${idx})">✕</button>
+        </div>`);
+      grid.innerHTML = existingHtml.concat(newHtml).join("");
+    }
+
+    function removeExistingThumb(idx) { existingImageIds.splice(idx, 1); renderFormThumbs(); }
+    function removeNewThumb(idx) { newImagesBase64.splice(idx, 1); renderFormThumbs(); }
+
+    function editProperty(propId) {
+      const p = allProperties.find(item => String(item.id) === String(propId));
+      if (!p) return;
+      editingPropId = p.id;
+      existingImageIds = [...(p.imagenes || [])];
+      newImagesBase64 = [];
+      switchTab("props");
+      document.getElementById("adminPanel").style.display = "block";
+      document.getElementById("adminPanel").scrollIntoView({ behavior: "smooth" });
+
+      document.getElementById("propTitulo").value = p.titulo;
+      document.getElementById("propOperacion").value = p.operacion;
+      document.getElementById("propTipo").value = p.tipo;
+      document.getElementById("propPrecio").value = p.precio;
+      document.getElementById("propEstado").value = p.estado;
+      document.getElementById("propUbicacion").value = p.ubicacion;
+      document.getElementById("propRec").value = p.recamaras || "";
+      document.getElementById("propBanos").value = p.banos || "";
+      document.getElementById("propEst").value = p.estacionamientos || "";
+      document.getElementById("propMetros").value = p.metros || "";
+      document.getElementById("propDesc").value = p.descripcion || "";
+
+      renderFormThumbs();
+      const btn = document.getElementById("btnSaveProp");
+      btn.innerText = "💾 Guardar Cambios de Propiedad"; btn.style.background = "#0284c7";
+      document.getElementById("btnCancelPropEdit").style.display = "block";
+    }
+
+    function resetPropertyForm() {
+      editingPropId = null; existingImageIds = []; newImagesBase64 = [];
+      document.getElementById("formProperty").reset();
+      document.getElementById("thumbsPreviewGrid").innerHTML = "";
+      document.getElementById("mediaStatusText").style.color = "#94a3b8";
+      document.getElementById("mediaStatusText").innerText = "Puedes seleccionar varias fotos para el carrusel de esta propiedad";
+      const btn = document.getElementById("btnSaveProp");
+      btn.innerText = "➕ Publicar Propiedad"; btn.style.background = "#10b981";
+      document.getElementById("btnCancelPropEdit").style.display = "none";
+    }
+
+    document.getElementById("formProperty").addEventListener("submit", async e => {
+      e.preventDefault();
+      const btn = document.getElementById("btnSaveProp");
+      const status = document.getElementById("propFormStatus");
+      btn.disabled = true; status.style.color = "#38bdf8"; status.innerText = "⏳ Guardando propiedad y galería...";
+
+      try {
+        await universalPost({
+          action: "saveProperty",
+          pass: adminPass,
+          propId: editingPropId || "",
+          titulo: document.getElementById("propTitulo").value.trim(),
+          operacion: document.getElementById("propOperacion").value,
+          tipo: document.getElementById("propTipo").value,
+          precio: document.getElementById("propPrecio").value.trim(),
+          estado: document.getElementById("propEstado").value,
+          ubicacion: document.getElementById("propUbicacion").value.trim(),
+          recamaras: document.getElementById("propRec").value || 0,
+          banos: document.getElementById("propBanos").value || 0,
+          estacionamientos: document.getElementById("propEst").value || 0,
+          metros: document.getElementById("propMetros").value || 0,
+          descripcion: document.getElementById("propDesc").value.trim(),
+          imagenesExistentes: existingImageIds,
+          nuevasImagenesBase64: newImagesBase64
+        });
+        await new Promise(r => setTimeout(r, 3000));
+        status.style.color = "#4ade80"; status.innerText = "✅ ¡Propiedad guardada!";
+        resetPropertyForm();
+        await loadPortal();
+        setTimeout(() => { status.innerText = ""; }, 3000);
+      } catch (err) {
+        status.style.color = "#ef4444"; status.innerText = "❌ Error: " + err.message;
+      } finally { btn.disabled = false; }
+    });
+
+    async function removeProperty(propId, title) {
+      if (!confirm(`¿Eliminar "${title}" del catálogo?`)) return;
+      await universalPost({ action: "deleteProperty", pass: adminPass, propId });
+      await new Promise(r => setTimeout(r, 1500));
+      await loadPortal();
+    }
+
+    /* ALTA Y ENLACES DE ASESORES */
+    document.getElementById("advPhotoInput").addEventListener("change", async e => {
+      if (!e.target.files[0]) return;
+      advisorPhotoBase64 = await compressImage(e.target.files[0], 400, 0.8);
+      const prev = document.getElementById("advPhotoPreview");
+      prev.src = advisorPhotoBase64; prev.style.display = "block";
+    });
+
+    document.getElementById("formAdvisor").addEventListener("submit", async e => {
+      e.preventDefault();
+      const btn = document.getElementById("btnSaveAdv");
+      const status = document.getElementById("advFormStatus");
+      btn.disabled = true; status.style.color = "#38bdf8"; status.innerText = "⏳ Guardando asesor...";
+      try {
+        await universalPost({
+          action: "saveAdvisor",
+          pass: adminPass,
+          asesorId: document.getElementById("advId").value.trim(),
+          nombre: document.getElementById("advNombre").value.trim(),
+          cargo: document.getElementById("advCargo").value.trim(),
+          whatsapp: document.getElementById("advWhatsapp").value.trim(),
+          fotoBase64: advisorPhotoBase64
+        });
+        await new Promise(r => setTimeout(r, 2500));
+        status.style.color = "#4ade80"; status.innerText = "✅ ¡Asesor registrado!";
+        document.getElementById("formAdvisor").reset();
+        document.getElementById("advPhotoPreview").style.display = "none";
+        advisorPhotoBase64 = "";
+        await loadPortal();
+        setTimeout(() => { status.innerText = ""; }, 3000);
+      } catch (err) {
+        status.style.color = "#ef4444"; status.innerText = "❌ Error: " + err.message;
+      } finally { btn.disabled = false; }
+    });
+
+    function renderAdvisorsAdminList() {
+      const box = document.getElementById("advisorsListContainer");
+      const baseUrl = window.location.origin + window.location.pathname;
+      box.innerHTML = allAdvisors.map(a => {
+        const nfcLink = `${baseUrl}?asesor=${encodeURIComponent(a.id)}`;
+        return `
+          <div class="advisor-list-item">
+            <div style="display:flex; align-items:center; gap:10px;">
+              <img src="${a.foto || 'https://placehold.co/80x80/334155/fff?text=A'}" style="width:40px; height:40px; border-radius:50%; object-fit:cover;">
+              <div>
+                <div style="font-size:0.86rem; font-weight:700;">${a.nombre}</div>
+                <div style="font-size:0.74rem; color:#94a3b8;">ID: ${a.id} • WA: ${a.whatsapp}</div>
+              </div>
+            </div>
+            <button type="button" class="btn-copy-link" onclick="navigator.clipboard.writeText('${nfcLink}'); alert('Enlace NFC copiado:\\n${nfcLink}');">📋 Copiar Link NFC</button>
+          </div>`;
+      }).join("");
+    }
+
+    document.getElementById("searchInput").addEventListener("input", renderProperties);
+    window.addEventListener("DOMContentLoaded", loadPortal);
+  </script>
+</body>
+</html>
