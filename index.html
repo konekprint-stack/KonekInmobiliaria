@@ -669,8 +669,34 @@
       document.getElementById("advisorsSection").style.display = isProps ? "none" : "block";
       document.getElementById("tabPropsBtn").classList.toggle("active", isProps);
       document.getElementById("tabAdvisorsBtn").classList.toggle("active", !isProps);
+      if (!isProps) renderAdvisorsAdminList();
     }
 
+    function renderAdvisorsAdminList() {
+      const sec = document.getElementById("advisorsSection");
+      if (!sec) return;
+      let box = document.getElementById("advisorsListContainer");
+      if (!box) {
+        box = document.createElement("div");
+        box.id = "advisorsListContainer";
+        sec.appendChild(box);
+      }
+      if (!allAdvisors || allAdvisors.length === 0) {
+        box.innerHTML = `<div style="font-size:0.8rem; color:#94a3b8; margin-top:6px;">No hay asesores registrados todavía.</div>`;
+        return;
+      }
+      box.innerHTML = allAdvisors.map(a => `
+        <div class="advisor-list-item">
+          <div style="display:flex; align-items:center; gap:10px;">
+            <img src="${a.foto || 'https://placehold.co/80x80/334155/fff?text=A'}" style="width:40px; height:40px; border-radius:50%; object-fit:cover;">
+            <div>
+              <div style="font-size:0.86rem; font-weight:700;">${a.nombre}</div>
+              <div style="font-size:0.74rem; color:#94a3b8;">${a.cargo} • WA: ${a.whatsapp}</div>
+            </div>
+          </div>
+        </div>`
+      ).join("");
+    }
     function unlockAdmin(pass) {
       isAdmin = true; adminPass = pass;
       sessionStorage.setItem("konek_estate_pass", pass);
